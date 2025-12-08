@@ -1,95 +1,98 @@
-# app/core/campaign_logic.py
+# backend/app/core/campaign_logic.py
 
-from typing import List, Dict
-import random
-
-
-# ---------------------------------------------------------
-# MOCK DATA — ileride DB/Redis gelecek
-# ---------------------------------------------------------
-
-BUYERS = {}         # buyer state machine ile ilerleyecek
-SELLERS = {}        # seller kayıtları
-CAMPAIGNS = {}      # aktif & pending kampanyalar
+from typing import Dict, List
+from backend.app.core.state import buyers, sellers, flash_windows
+from backend.app.models.flash_window import FlashWindow
 
 
 # ---------------------------------------------------------
-# SELLER-DRIVEN CAMPAIGN CREATION
+# BUYER SIGNAL HANDLER
 # ---------------------------------------------------------
 
-def create_seller_driven_campaign(req):
+def process_buyer_signal(payload: Dict) -> Dict:
     """
-    Skeleton: Seller kampanya açmak istediğinde burası çalışır.
-    Bu sadece kampanya taslağını oluşturur.
+    Stores incoming buyer signal into in-memory state (Faz 1).
     """
-    campaign_id = f"CMP-{random.randint(1000,9999)}"
-
-    CAMPAIGNS[campaign_id] = {
-        "id": campaign_id,
-        "type": "SELLER_DRIVEN",
-        "seller_id": req.seller_id,
-        "product_id": req.product_id,
-        "min_price": req.min_price,
-        "max_price": req.max_price,
-        "min_volume": req.min_volume,
-        "status": "WAITING_FOR_BUYERS",
-        "collected_demand": []
-    }
-
-    return CAMPAIGNS[campaign_id]
-
-
-# ---------------------------------------------------------
-# BUYER-DRIVEN TRIGGER LOGIC
-# ---------------------------------------------------------
-
-def process_buyer_driven_trigger(req):
-    """
-    Eğer buyer taleği belirli bir threshold’a ulaşırsa
-    sistemi seller onay aşamasına getirir.
-    """
-    total_volume = sum([d.get("volume", 1) for d in req.buyer_demands])
-
-    # Skeleton threshold — ileride pricing & ML model eklenecek
-    THRESHOLD = 10
-
-    if total_volume >= THRESHOLD:
-        return {
-            "action": "ASK_SELLER_APPROVAL",
-            "total_volume": total_volume,
-            "product_id": req.product_id
-        }
+    buyer_id = payload.get("buyer_id", "UNKNOWN")
+    buyers.append(payload)
 
     return {
-        "action": "KEEP_COLLECTING",
-        "current_volume": total_volume,
-        "threshold": THRESHOLD
+        "message": f"Buyer signal received from {buyer_id}",
+        "total_buyers": len(buyers),
+        "buyer_data": payload
     }
 
 
 # ---------------------------------------------------------
-# AI-DRIVEN OPPORTUNITY DETECTION
+# SELLER SIGNAL HANDLER
+# ---------------------------------------------------------
+
+def process_seller_signal(payload: Dict) -> Dict:
+    """
+    Stores incoming seller signal into in-memory state (Faz 1).
+    """
+    seller_id = payload.get("seller_id", "UNKNOWN")
+    sellers.append(payload)
+
+    return {
+        "message": f"Seller signal received from {seller_id}",
+        "total_sellers": len(sellers),
+        "seller_data": payload
+    }
+
+
+# ---------------------------------------------------------
+# AI-OPPORTUNITY ANALYZER (Faz 1 - Simulated)
 # ---------------------------------------------------------
 
 def analyze_ai_opportunities() -> List[Dict]:
     """
-    AI-driven skeleton:
-    şu anda mock logic, ama gerçek sistemde burada:
-    - buyer cluster analizi
-    - seller stok fazlası tespiti
-    - price curve analysis
-    - ML scoring
-    
-    yapılacak.
+    Dummy AI opportunity logic (Faz 1).
+    Returns a mocked opportunity for testing the system.
     """
+
+    if not buyers or not sellers:
+        return [{
+            "status": "waiting",
+            "reason": "Not enough buyers or sellers to generate opportunity."
+        }]
+
     mock_opportunity = {
-        "seller_id": "S123",
-        "product_id": "P900",
+        "seller_id": sellers[-1].get("seller_id"),
+        "product_id": buyers[-1].get("product_id"),
         "estimated_price": 95.0,
-        "buyer_group": ["B001", "B004", "B033"],
+        "buyer_group": [b.get("buyer_id") for b in buyers[-3:]],  # last 3 buyers
         "score": 0.82,
         "action": "ASK_SELLER"
     }
 
-    # ileride: Eğer gerçek fırsat yoksa boş liste dönecek
     return [mock_opportunity]
+
+
+# ---------------------------------------------------------
+# FLASH WINDOW GENERATION (Faz 1 - Simulated)
+# ---------------------------------------------------------
+
+def generate_flash_window(buyer_group: List[Dict], seller_data: Dict) -> Dict:
+    """
+    Creates a FlashWindow object using basic static logic (Faz 1).
+    """
+
+    if not buyer_group or not seller_data:
+        return {"error": "Missing buyer group or seller data."}
+
+    fw = FlashWindow(
+        seller_id=seller_data.get("seller_id"),
+        product_id=seller_data.get("product_id", "UNKNOWN"),
+        start_time="14:00",
+        end_time="14:20",
+        expected_buyers=len(buyer_group),
+        benefit="10% discount for flash buyers"
+    )
+
+    flash_windows.append(fw.dict())
+
+    return {
+        "status": "flash_window_created",
+        "flash_window": fw.dict()
+    }

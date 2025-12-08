@@ -1,3 +1,5 @@
+from pydantic import BaseModel
+
 class FlashWindow(BaseModel):
     seller_id: str
     product_id: str

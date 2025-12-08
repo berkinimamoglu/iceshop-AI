@@ -1,5 +1,6 @@
 from fastapi import APIRouter
-from app.core.campaign_logic import generate_flash_window
+from backend.app.core.campaign_logic import generate_flash_window
+
 
 router = APIRouter()
 
