@@ -1,11 +1,14 @@
 from fastapi import APIRouter
 
-router = APIRouter()
+from backend.app.core.campaign_logic import analyze_ai_opportunities
 
-@router.get("/campaigns")
-def list_campaigns():
-    return {"message": "List of campaigns will be added here."}
+router = APIRouter(tags=["campaigns"])
 
-@router.post("/campaigns/create")
-def create_campaign():
-    return {"message": "Campaign creation endpoint placeholder."}
+
+@router.get("/campaigns/opportunities")
+async def get_ai_opportunities():
+    """
+    Alıcı ve satıcı sinyallerine göre AI fırsat analizi.
+    Faz 1'de dummy (mock) sonuç döner.
+    """
+    return analyze_ai_opportunities()
