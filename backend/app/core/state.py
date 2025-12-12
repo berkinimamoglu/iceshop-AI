@@ -18,12 +18,13 @@ class AppState:
     Faz 3'te DB ile değiştirilecek.
     """
 
-    def __init__(self) -> None:
-        self.buyers: Dict[str, Buyer] = {}
-        self.sellers: Dict[str, Seller] = {}
-        self.flash_windows: Dict[str, FlashWindow] = {}
-        self.precommits: Dict[str, PreCommit] = {}
-        self.products: Dict[str, Product] = {}
+    def __init__(self):
+        print("🔥 APPSTATE INSTANCE CREATED:", id(self))
+        self.buyers = {}
+        self.sellers = {}
+        self.products = {}
+        self.precommits = {}
+        self.flash_windows = {}
 
     # ---------- BUYERS ----------
     def add_buyer(self, buyer: Buyer) -> Buyer:
@@ -69,22 +70,23 @@ class AppState:
             if p.proposed_window_id == proposed_window_id
         ]
 
-    def link_precommits_to_window(self, window_id: str, seller_id: str) -> List[PreCommit]:
-        """
-        Belirli bir satıcı + "taslak pencere" için olan tüm pre-commit'leri,
-        ilgili gerçek FlashWindow ile ilişkilendirir.
-        """
-        window = self.flash_windows.get(window_id)
+    def link_precommits_to_window(self, flash_window_id: str, seller_id: str):
+        window = self.flash_windows.get(flash_window_id)
         if not window:
-            return []
+            return 0
 
-        related = [
-            p for p in self.precommits.values()
-            if p.seller_id == seller_id
-        ]
-        window.pre_commit_ids = [p.id for p in related]
-        self.flash_windows[window_id] = window
-        return related
+        linked = 0
+
+        for pre in self.precommits.values():
+            if (
+                pre.seller_id == seller_id
+                and pre.proposed_window_id == flash_window_id
+            ):
+                if pre.id not in window.pre_commit_ids:
+                    window.pre_commit_ids.append(pre.id)
+                    linked += 1
+
+        return linked
 
     def get_precommit_buyers_for_window(self, window_id: str) -> List[Buyer]:
         window = self.flash_windows.get(window_id)
@@ -140,3 +142,4 @@ class AppState:
         
 
 state = AppState()
+

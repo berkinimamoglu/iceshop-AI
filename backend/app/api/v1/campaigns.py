@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from backend.app.core.campaign_logic import analyze_ai_opportunities
+from app.core.campaign_logic import analyze_ai_opportunities
 
 router = APIRouter(tags=["campaigns"])
 

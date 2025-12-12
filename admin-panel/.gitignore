@@ -1,6 +1,39 @@
-venv/
+# Python
 __pycache__/
-*.pyc
-.env
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.env/
+.env.*
+
+# OS files
 .DS_Store
-admin-panel/node_modules/
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Test caches
+.pytest_cache/
+
+# Temporary files
+*.tmp
+*.swp
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local configs
+config.local.*
